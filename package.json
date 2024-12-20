@@ -1,0 +1,13 @@
+{
+  "name": "eb-bill",
+  "version": "1.0.0",
+  "description": "A project for managing electricity bills",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "npm build"
+  },
+  "keywords": ["electricity", "bill", "management"],
+  "author": "vishalm01",
+  "license": "ISC"
+}
