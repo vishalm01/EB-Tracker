@@ -1,0 +1,292 @@
+/* General Body Styling */
+body {
+  font-family: 'Poppins', sans-serif;
+  background: linear-gradient(145deg, #16647e 10%, #111B3E 30%, #820C3E 50%, #B71A45 70%, #67285F 90%);
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: cover;
+  color: #FEFFFF;
+  margin: 0;
+  padding: 0;
+  min-height: 100vh; /* Ensures gradient spans the full height of the content */
+}
+
+
+/* Navbar */
+.navbar {
+  background: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.navbar-brand, .nav-link {
+  color: #FEFFFF !important;
+  font-weight: 800;
+  letter-spacing: 1px;
+  font-family: 'Oswald', sans-serif;
+}
+
+.navbar-nav .nav-link:hover {
+  color: #FFE0FA !important;
+}
+
+.navbar-toggler {
+  border: none;
+}
+
+.navbar-toggler-icon {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3E%3Cpath stroke='rgba%28255,255,255,0.75%29' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3E%3C/svg%3E");
+}
+
+/* Card Styling */
+.card {
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(15px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  border-radius: 15px;
+  padding: 20px;
+}
+
+/* Chart and Dropdown */
+.chart-scrollable {
+  overflow-x: auto;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+canvas {
+  background: rgba(255, 255, 255, 0.4);
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  border-radius: 10px;
+}
+
+/* Dropdown Styling */
+.custom-dropdown {
+  width: 200px;
+  background: rgba(255, 255, 255, 0.1);
+  color: #FEFFFF;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 8px;
+  font-size: 1rem;
+  padding: 5px 10px;
+  backdrop-filter: blur(10px);
+  transition: box-shadow 0.3s ease, transform 0.2s ease;
+}
+
+.custom-dropdown:hover,
+.custom-dropdown:focus {
+  box-shadow: 0px 4px 10px rgba(255, 255, 255, 0.3);
+  transform: scale(1.05);
+  outline: none;
+}
+
+.custom-dropdown option {
+  background: rgba(30, 30, 30, 0.9);
+  color: #FEFFFF;
+}
+
+.custom-dropdown option:hover {
+  background: rgba(183, 26, 69, 0.9);
+  color: #FFF;
+}
+
+.custom-dropdown option:focus {
+  outline: none;
+  background: rgba(130, 12, 62, 0.9);
+}
+
+/* Grid Layout */
+.grid-layout {
+  display: grid;
+  gap: 20px;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  align-items: stretch;
+}
+
+/* Box Styling */
+.box {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100%;
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(15px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 15px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  color: #FEFFFF;
+}
+
+/* Headings */
+.card-title, h2, h3, h4, h5, h6 {
+  font-family: 'Bitter', serif;
+  color: #FEFFFF;
+  font-weight: bold;
+  text-align: center;
+}
+
+/* Paragraphs and Input */
+p, label, input, button {
+  font-family: 'Poppins', sans-serif;
+  color: #FEFFFF;
+}
+
+/* Input and Buttons */
+.theme-input, .theme-button {
+  border: 1px solid #B71A45;
+  background: rgba(255, 255, 255, 0.1);
+  color: #FEFFFF;
+  border-radius: 5px;
+  padding: 10px 15px;
+  font-size: 1rem;
+  width: 100%;
+}
+
+.theme-button {
+  margin-top: 20px;
+  font-weight: bold;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.theme-button:hover {
+  transform: scale(1.01);
+  color: #d51c4d;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.3);
+}
+/* Style for the dropdown options */
+.form-select option {
+  background-color: #343a40;
+  color: #ffffff;
+}
+
+/* Optional: Hover effect for options */
+.form-select option:hover {
+  background-color: #495057;
+}
+
+/* Table Styling */
+.table {
+  color: #FEFFFF;
+  border: 1px solid #67285F;
+  font-size: 0.9rem;
+}
+
+.table th, .table td {
+  text-align: center;
+  vertical-align: middle;
+}
+
+/* Frosted Canvas */
+canvas {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(15px);
+  border-radius: 15px;
+  padding: 10px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+  margin-bottom: 20px;
+  width: 100%; 
+  height: auto; 
+  max-height: 400px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  body {
+      font-size: 90%;
+  }
+
+  .navbar-brand, .nav-link {
+      font-size: 0.9rem;
+  }
+
+  h2, h3 {
+      font-size: 1.5rem;
+  }
+
+  p, label {
+      font-size: 0.9rem;
+  }
+
+  .theme-input, .theme-button {
+      font-size: 0.9rem;
+      padding: 8px 12px;
+  }
+
+  .card {
+      padding: 15px;
+  }
+
+  canvas {
+      padding: 8px;
+  }
+}
+
+@media (max-width: 480px) {
+  .grid-layout {
+      grid-template-columns: 1fr;
+  }
+
+  .navbar-brand {
+      font-size: 0.8rem;
+  }
+
+  .theme-button {
+      font-size: 0.8rem;
+  }
+
+  .table {
+      font-size: 0.8rem;
+  }
+}
+
+/* Profile Page Styling */
+#profileSection {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+}
+
+.profile-card {
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(15px);
+  padding: 2rem;
+  border-radius: 1.2rem;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  width: 100%;
+  max-width: 525px;
+  color: #fff;
+}
+
+.profile-field {
+  margin-bottom: 1rem;
+  font-size: clamp(1rem, 2.5vw, 1.2rem);
+  color: #ddd;
+}
+
+.profile-field span {
+  color: #fff;
+  font-size: clamp(1rem, 2.5vw, 1.2rem);
+}
+
+.logout-text {
+  margin-top: 2rem;
+  color: #dc3545;
+  cursor: pointer;
+  font-size: clamp(1rem, 2.5vw, 1.2rem);
+  transition: color 0.2s;
+}
+
+.logout-text:hover {
+  color: #a71d2a;
+}
+
+/* General Styling for p, span, and h elements */
+.profile-field p, span {
+  font-size: clamp(1rem, 2.5vw, 1.2rem);
+}
+.profile-field h2 {
+  font-size: clamp(1rem, 2.5vw, 1.2rem);
+}

@@ -1,16 +1,27 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js";
-import { collection, addDoc, getDocs, query, orderBy, Timestamp, writeBatch, doc, getFirestore } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore.js";
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-auth.js";
-import { firebaseConfig } from "./firebase-config.js"; // Ensure this path is correct
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-app.js";
+import {
+  getAuth,
+  onAuthStateChanged,
+} from "https://www.gstatic.com/firebasejs/9.17.1/firebase-auth.js";
+import {
+  getFirestore,
+  collection,
+  addDoc,
+  getDocs,
+  query,
+  orderBy,
+  Timestamp,
+  writeBatch,
+  doc,
+} from "https://www.gstatic.com/firebasejs/9.17.1/firebase-firestore.js";
+import { firebaseConfig } from "./firebase-config.js";
 
-// Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
 let currentUserUid = null;
 
-// HTML Elements
 const readingForm = document.getElementById("readingForm");
 const currentReadingInput = document.getElementById("currentReading");
 const lastReadingDisplay = document.getElementById("lastReading");
@@ -26,88 +37,56 @@ const updateStartingReadingButton = document.getElementById("updateStartingReadi
 
 let usageChart;
 
-// Listen for authentication state changes
 onAuthStateChanged(auth, (user) => {
   if (user) {
     currentUserUid = user.uid;
     loadReadingsIntoDropdown();
-    refreshUI(); // Refresh the UI for the logged-in user
+    refreshUI();
   } else {
-    alert("You are not logged in. Redirecting to login...");
     window.location.href = "login.html";
   }
 });
 
-// Calculate the average usage based on the number of days between readings
 function calculateAverageUsage(startingReading, lastReading) {
-  // Convert Firestore Timestamps to JS Date objects if necessary
-  const startDate = startingReading.date.toDate ? startingReading.date.toDate() : new Date(startingReading.date);
-  const endDate = lastReading.date.toDate ? lastReading.date.toDate() : new Date(lastReading.date);
-
-  // Check if dates are valid
-  if (isNaN(startDate) || isNaN(endDate)) {
-    console.error("Invalid dates in readings:", { startDate, endDate });
-    return "N/A";
-  }
-
-  // Calculate the number of days between readings
-  const daysDifference = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)); // Convert ms to days
-  if (daysDifference <= 0) {
-    console.error("Invalid days difference:", daysDifference);
-    return "N/A";
-  }
-
-  // Calculate average usage
+  const startDate = new Date(startingReading.date);
+  const endDate = new Date(lastReading.date);
+  const daysDifference = (endDate - startDate) / (1000 * 60 * 60 * 24);
+  if (daysDifference === 0) return "N/A";
   const totalUnitsUsed = lastReading.value - startingReading.value;
-  if (totalUnitsUsed <= 0) {
-    console.error("Invalid total units used:", totalUnitsUsed);
-    return "N/A";
-  }
-
   const averageUsage = totalUnitsUsed / daysDifference;
   return averageUsage.toFixed(2);
 }
 
 
-// Estimate the total units for a 60-day period
 function calculateEstimatedTotalUnits(averageUsage) {
-  if (isNaN(averageUsage) || averageUsage <= 0) return "N/A";
-  const estimatedTotalUnits = averageUsage * 60; // 60 days estimate
+  if (!averageUsage || averageUsage === "N/A") return "N/A";
+  const estimatedTotalUnits = averageUsage * 60;
   return estimatedTotalUnits.toFixed(2);
 }
 
-// Calculate the bill amount based on estimated total units
 function calculateBill(units) {
-  if (isNaN(units) || units <= 0) return "N/A";
-  
   const rates = [
     { limit: 100, rate: 0 },
     { limit: 200, rate: 2.35 },
-    { limit: 400, rate: 4.70 },
-    { limit: 500, rate: 6.30 },
-    { limit: 600, rate: 8.40 },
+    { limit: 400, rate: 4.7 },
+    { limit: 500, rate: 6.3 },
+    { limit: 600, rate: 8.4 },
     { limit: 800, rate: 9.45 },
-    { limit: 1000, rate: 10.50 },
+    { limit: 1000, rate: 10.5 },
     { limit: Infinity, rate: 11.55 },
   ];
-
-  let totalCost = 0;
-  let previousLimit = 0;
-
+  let totalCost = 0,
+    previousLimit = 0;
   for (const { limit, rate } of rates) {
     if (units > previousLimit) {
       const diff = Math.min(units - previousLimit, limit - previousLimit);
       totalCost += diff * rate;
       previousLimit = limit;
-    } else {
-      break;
-    }
+    } else break;
   }
-
   return totalCost.toFixed(2);
 }
 
-// Fetch readings for the logged-in user
 async function fetchReadings() {
   if (!currentUserUid) return [];
   try {
@@ -125,81 +104,66 @@ async function fetchReadings() {
   }
 }
 
-// Find the starting reading by searching in reverse
 function findStartingReading(readings) {
   for (let i = readings.length - 1; i >= 0; i--) {
     if (readings[i].startingReading) {
       return readings[i];
     }
   }
-  return null; // Return null if no startingReading is found
+  return null;
 }
 
-
-// Load readings into the dropdown and set default to the current starting reading
 async function loadReadingsIntoDropdown() {
   const readings = await fetchReadings();
-  startingReadingSelector.innerHTML = ""; // Clear existing options
-
+  startingReadingSelector.innerHTML = "";
   let defaultStartingReadingId = null;
-
-  // Populate the dropdown and find the current starting reading
   readings.forEach((reading) => {
     const option = document.createElement("option");
-    option.value = reading.id; // Use Firestore document ID as the value
+    option.value = reading.id;
     option.textContent = `${reading.date} - ${reading.value} units`;
-
     if (reading.startingReading) {
-      defaultStartingReadingId = reading.id; // Save the ID of the starting reading
+      defaultStartingReadingId = reading.id;
     }
-
     startingReadingSelector.appendChild(option);
   });
-
-  // Set the dropdown's default value to the current starting reading
   if (defaultStartingReadingId) {
     startingReadingSelector.value = defaultStartingReadingId;
   }
 }
 
-// Attach Event Listener to "Set as Starting Reading" Button with Debugging
 updateStartingReadingButton.addEventListener("click", () => {
   updateStartingReading();
 });
 
-// Update the startingReading field in Firestore
 async function updateStartingReading() {
   const selectedReadingId = startingReadingSelector.value;
-
   if (!selectedReadingId) {
     alert("Please select a starting reading.");
     return;
   }
-
   try {
     const readings = await fetchReadings();
-    const selectedReadingIndex = readings.findIndex((reading) => reading.id === selectedReadingId);
-
+    const selectedReadingIndex = readings.findIndex(
+      (reading) => reading.id === selectedReadingId
+    );
     if (selectedReadingIndex === -1) {
       alert("Error: Selected reading not found.");
       return;
     }
-
     const selectedReadingDate = readings[selectedReadingIndex].date;
-
-    // Firestore Batch Update
     const batch = writeBatch(db);
     const readingsRef = collection(db, "users", currentUserUid, "readings");
-
     readings.forEach((reading) => {
       const docRef = doc(readingsRef, reading.id);
       if (reading.id === selectedReadingId) {
         batch.update(docRef, { startingReading: true });
-      } else if (new Date(reading.date) > new Date(selectedReadingDate) || reading.startingReading) {
+      } else if (
+        new Date(reading.date) > new Date(selectedReadingDate) ||
+        reading.startingReading
+      ) {
         batch.update(docRef, { startingReading: false });
       }
     });
-
     await batch.commit();
     await refreshUI();
   } catch (error) {
@@ -208,14 +172,12 @@ async function updateStartingReading() {
   }
 }
 
-// Update the chart with new data
 function updateChart(chart, labels, data) {
   chart.data.labels = labels;
   chart.data.datasets[0].data = data;
   chart.update();
 }
 
-// Update the daily usage chart
 function updateUsageChart(readings) {
   if (readings.length < 2) {
     usageChart.data.labels = [];
@@ -223,22 +185,51 @@ function updateUsageChart(readings) {
     usageChart.update();
     return;
   }
-  const deltas = readings.slice(1).map((r, i) => (r.value - readings[i].value).toFixed(2));
-  const dates = readings.slice(1).map((r) => r.date);
+  const deltas = [];
+  const dates = [];
+  for (let i = 1; i < readings.length; i++) {
+    const currentReading = readings[i];
+    const previousReading = readings[i - 1];
+    const currentDate = new Date(currentReading.date);
+    const previousDate = new Date(previousReading.date);
+    const daysDifference = (currentDate - previousDate) / (1000 * 60 * 60 * 24);
+    if (daysDifference === 1) {
+      const delta = (currentReading.value - previousReading.value).toFixed(2);
+      deltas.push(delta);
+      dates.push(formatDate(currentDate));
+    } else {
+      const averageUsage = (
+        (currentReading.value - previousReading.value) /
+        daysDifference
+      ).toFixed(2);
+      for (let j = 1; j <= daysDifference; j++) {
+        const interpolatedDate = new Date(previousDate);
+        interpolatedDate.setDate(previousDate.getDate() + j);
+        deltas.push(averageUsage);
+        dates.push(formatDate(interpolatedDate));
+      }
+    }
+  }
   const isSmallScreen = window.innerWidth <= 768;
-  const visibleDataCount = isSmallScreen ? 8 : 15;
+  const visibleDataCount = isSmallScreen ? 7 : 16;
   const start = Math.max(0, deltas.length - visibleDataCount);
-  usageChart.data.labels = dates.slice(start);
-  usageChart.data.datasets[0].data = deltas.slice(start);
+  usageChart.data.labels = dates.slice(start, start + visibleDataCount);
+  usageChart.data.datasets[0].data = deltas.slice(
+    start,
+    start + visibleDataCount
+  );
   usageChart.update();
 }
 
-// Add new reading to the logged-in user's sub-collection
+function formatDate(date) {
+  const day = String(date.getDate()).padStart(2, "0");
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  return `${day}-${month}`;
+}
+
 readingForm.addEventListener("submit", async (e) => {
   e.preventDefault();
-
-  // Parse input as a float
-  const value = parseFloat(currentReadingInput.value).toFixed(2); // Keep it as float with 2 decimal places
+  const value = parseFloat(currentReadingInput.value).toFixed(2);
   if (isNaN(value) || value <= 0) {
     alert("Please enter a valid reading.");
     return;
@@ -247,21 +238,33 @@ readingForm.addEventListener("submit", async (e) => {
     alert("Error: User is not logged in.");
     return;
   }
-
   try {
     const readingsRef = collection(db, "users", currentUserUid, "readings");
+    const readingsQuery = query(readingsRef, orderBy("date", "desc"));
+    const readingsSnapshot = await getDocs(readingsQuery);
+    const isFirstReading = readingsSnapshot.empty;
+    const lastReadingDoc = readingsSnapshot.docs[0];
+    const lastReadingValue = lastReadingDoc ? lastReadingDoc.data().value : 0;
+    if (parseFloat(value) <= lastReadingValue) {
+      alert(
+        `The input reading must be greater than the last reading of ${lastReadingValue}.`
+      );
+      return;
+    }
     await addDoc(readingsRef, {
-      value: parseFloat(value), // Ensure the value is stored as float
-      date: Timestamp.now(), // Current timestamp
-      startingReading: false, // Default value for startingReading
+      value: parseFloat(value),
+      date: Timestamp.now(),
+      startingReading: isFirstReading,
     });
-    await refreshUI(); // Refresh the UI after adding the reading
+    currentReadingInput.value = "";
+    await refreshUI();
+    await loadReadingsIntoDropdown();
   } catch (error) {
     console.error("Error adding reading:", error);
+    alert("Error adding reading. Please try again.");
   }
 });
 
-// Refresh the UI with the latest data
 async function refreshUI() {
   const readings = await fetchReadings();
 
@@ -283,26 +286,43 @@ async function refreshUI() {
     const startingValue = parseFloat(startingReading.value).toFixed(2);
     const lastValue = parseFloat(lastReading.value).toFixed(2);
     const totalUnitsUsed = (lastValue - startingValue).toFixed(2);
+
     const averageUsage = calculateAverageUsage(startingReading, lastReading);
-    const estimatedTotalUnits = calculateEstimatedTotalUnits(averageUsage);
-    const estimatedPrice = calculateBill(estimatedTotalUnits);
+
+    if (averageUsage === "N/A") {
+      averageUsageDisplay.textContent = "N/A";
+      estimatedTotalUnitsDisplay.textContent = "N/A";
+      estimatedPriceDisplay.textContent = "N/A";
+    } else {
+      const estimatedTotalUnits = calculateEstimatedTotalUnits(averageUsage);
+      const estimatedPrice = calculateBill(estimatedTotalUnits);
+
+      averageUsageDisplay.textContent = averageUsage;
+      estimatedTotalUnitsDisplay.textContent = estimatedTotalUnits;
+      estimatedPriceDisplay.textContent = estimatedPrice;
+    }
+
     startingReadingDisplay.textContent = startingValue;
     lastReadingDisplay.textContent = lastValue;
     unitsUsedDisplay.textContent = totalUnitsUsed;
     billAmountDisplay.textContent = calculateBill(totalUnitsUsed);
-    averageUsageDisplay.textContent = averageUsage;
-    estimatedTotalUnitsDisplay.textContent = estimatedTotalUnits;
-    estimatedPriceDisplay.textContent = estimatedPrice;
+  } else {
+    startingReadingDisplay.textContent = "N/A";
+    lastReadingDisplay.textContent = parseFloat(lastReading.value).toFixed(2);
+    unitsUsedDisplay.textContent = "N/A";
+    billAmountDisplay.textContent = "N/A";
+    averageUsageDisplay.textContent = "N/A";
+    estimatedTotalUnitsDisplay.textContent = "N/A";
+    estimatedPriceDisplay.textContent = "N/A";
   }
+
+  updateUsageChart(readings);
 }
 
-
-// Initialize charts
 function initializeCharts() {
   usageChart = initializeChart(usageChartCanvas, "Daily Usage");
 }
 
-// Initialize a chart
 function initializeChart(canvas, label) {
   return new Chart(canvas.getContext("2d"), {
     type: "line",
@@ -312,31 +332,55 @@ function initializeChart(canvas, label) {
         {
           label,
           data: [],
-          backgroundColor: "rgba(30, 144, 255, 0.1)",
+          backgroundColor: "rgba(30, 144, 255, 0.2)",
           borderColor: "#1E90FF",
+          borderWidth: 2,
           fill: true,
         },
       ],
     },
     options: {
       responsive: true,
+      maintainAspectRatio: false,
       plugins: {
         legend: {
           display: true,
           labels: {
             font: { weight: "bold", size: 14 },
-            color: "#FFFFFF",
+            color: "#fff",
           },
         },
       },
       scales: {
         x: {
-          title: { display: true, text: "PERIOD", font: { size: 14 }, color: "#FFFFFF" },
-          ticks: { font: { size: 12 }, color: "#FFFFFF" },
+          title: {
+            display: true,
+            text: "DATE",
+            font: { size: 14 },
+            color: "#fff",
+          },
+          ticks: {
+            font: { size: 12 },
+            color: "#fff",
+            callback: function (value, index, values) {
+              return this.getLabelForValue(value);
+            },
+          },
         },
         y: {
-          title: { display: true, text: "USAGE", font: { size: 14 }, color: "#FFFFFF" },
-          ticks: { font: { weight: "bold", size: 12 }, color: "#FFFFFF" },
+          title: {
+            display: true,
+            text: "USAGE",
+            font: { size: 14 },
+            color: "#fff",
+          },
+          ticks: {
+            font: { weight: "bold", size: 12 },
+            color: "#fff",
+            callback: function (value) {
+              return Number.isInteger(value) ? value : null;
+            },
+          },
           beginAtZero: true,
         },
       },
@@ -344,7 +388,6 @@ function initializeChart(canvas, label) {
   });
 }
 
-// Initialize the app
 (async () => {
   initializeCharts();
 })();
